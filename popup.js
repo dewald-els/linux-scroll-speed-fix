@@ -206,9 +206,15 @@ function executeScriptAllTabs(code) {
         for(let i = 0; i < tabs.length; i++) {
             try {
                 if(tabs[i].url) {
-                    chrome.tabs.executeScript(tabs[i].id, { code }, function() {
-                        if(chrome.runtime.lastError) {} // Suppress error
-                    });  
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabs[i].id },
+                        func: function(codeToExecute) {
+                            eval(codeToExecute);
+                        },
+                        args: [code]
+                    }).catch(() => {
+                        // Suppress error
+                    });
                 }
             }
             catch(err) {
@@ -222,7 +228,7 @@ function executeScriptAllTabs(code) {
 function refreshTab(message) {
 
     if((message) && (confirm(message))) {
-        chrome.tabs.getAllInWindow(null, function(tabs) {
+        chrome.tabs.query({currentWindow: true}, function(tabs) {
             for(let i = 0; i < tabs.length; i++) {
                 chrome.tabs.update(tabs[i].id, {url: tabs[i].url});
             }
